@@ -8,6 +8,18 @@ In `QtCreator > Tools > Options > Debugger > Locals & Expressions > Extra Debugg
 
 Enter path to `qtcreator/printers.py`
 
+### Implementation Notes
+
+Based on [Qt Debugging Helpers](https://doc.qt.io/qtcreator/creator-debugging-helpers.html)
+
+Note: "raw" gdb pretty printer don't work or at least not well with qtcreator, thus a separate implementation
+
+The Qt debugger python api can be a bit obscure, but these resources helper:
+
+* https://doc.qt.io/qtcreator/creator-debugging-helpers.html
+* https://github.com/qt-creator/qt-creator/tree/master/share/qtcreator/debugger
+* https://github.com/qt-creator/qt-creator/blob/master/share/qtcreator/debugger/dumper.py
+
 ## GDB
 
 Example `~/.gdbinit`:
