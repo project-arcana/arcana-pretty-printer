@@ -20,6 +20,13 @@ The Qt debugger python api can be a bit obscure, but these resources helper:
 * https://github.com/qt-creator/qt-creator/tree/master/share/qtcreator/debugger
 * https://github.com/qt-creator/qt-creator/blob/master/share/qtcreator/debugger/dumper.py
 
+### TODO
+
+There seems to be (undocumented) support for plot and image data
+
+* Dumper.py has a `putPlotData` function that calls `putDisplay` with `plotdata:separate`
+* The forum post https://forum.qt.io/topic/47370/debug-helper-for-visualizing-images indicates the possibility as well
+
 ## GDB
 
 Example `~/.gdbinit`:
