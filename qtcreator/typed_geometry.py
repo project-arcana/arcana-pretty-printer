@@ -105,7 +105,6 @@ def qdump__tg__aabb(d, value):
                 sname += ")"
                 with SubItem(d, "size"):
                     d.putNumChild(dim)
-                    d.putName("size")
                     d.putValue(sname)
                     d.putType("")
                     if d.isExpanded():

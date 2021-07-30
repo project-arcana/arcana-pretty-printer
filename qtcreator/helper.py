@@ -1,5 +1,5 @@
 
-from dumper import DumperBase, Children, SubItem
+from dumper import DumperBase, Children, SubItem, UnnamedSubItem
 from utils import TypeCode
 
 
@@ -26,16 +26,56 @@ def arithmetic_value(value):
 # NOTE: currently unable to provide previews of structs due to qt's arch
 # NOTE: ensures that all " are escaped
 def to_str_preview(value):
+    s = to_str_preview_or_none(value)
+    if s is None:
+        return "??"
+    return s
+
+
+# looks for ways to interpret value as a string
+# returns None if not possible
+def try_get_string(value):
+    s_data = value.findMemberByName("_data")
+    if s_data is None:
+        return None
+    if s_data.type.code != TypeCode.Pointer:
+        return None
+    if s_data.type.target().name != "char":
+        return None
+
+    s_size = value.findMemberByName("_size")
+    if s_size is None:
+        return None
+    if s_size.type.code != TypeCode.Integral:
+        return None
+
+    more = ""
+    size = int(s_size)
+    if size > 1000:
+        size = 1000
+        more = "..."
+    mem = bytes(value.dumper.readRawMemory(s_data.pointer(), size)
+                ).decode('utf-8').replace('"', '\\\\\\"')
+    return '\\"' + mem + '\\"' + more
+
+
+def to_str_preview_or_none(value):
     # TODO: might not recognize typedefs
     if isinstance(value, DumperBase.Value):
         if value.type is None:
-            return "??"
+            return None
 
         if value.type.code == TypeCode.Float:
             return "{:.3g}".format(float(value.floatingPoint()))
 
         if value.type.code == TypeCode.Struct:
-            return "??"
+
+            # "string protocol"
+            s = try_get_string(value)
+            if s is not None:
+                return s
+
+            return None
 
         return value.display().replace('"', '\\"')
 
@@ -46,10 +86,11 @@ def to_str_preview(value):
     return str(value).replace('"', '\\"')
 
 
-def add_computed_child(d, name, val, type="", encoding=None, children=[], childrenNames=[]):
-    with SubItem(d, name):
-        d.putNumChild(len(children))
+def add_computed_child(d, name, val, type="", encoding=None, children=[], childrenNames=[], iname=None):
+    with UnnamedSubItem(d, iname if iname is not None else name):
+        d.putField('iname', d.currentIName)
         d.putName(name)
+        d.putNumChild(len(children))
         d.putValue(str(val), encoding=encoding)
         d.putType(type)
         if d.isExpanded() and len(children) > 0:

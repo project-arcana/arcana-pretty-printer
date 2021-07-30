@@ -1,6 +1,6 @@
 
 import math
-from dumper import Children, SubItem
+from dumper import Children, SubItem, UnnamedSubItem
 from utils import DisplayFormat
 from helper import *
 
@@ -165,11 +165,12 @@ def qdump__cc__set(d, value):
 
 def qdump__cc__map(d, value):
     size = int(value["_size"])
-    innerType = value.type.templateArgument(0)
+    keyType = value.type.templateArgument(0)
+    valueType = value.type.templateArgument(1)
 
     maxCnt = 500
 
-    d.putValue("{" + "{} x {}".format(size, innerType.name) + "}")
+    d.putValue("{" + "{} x {} -> {}".format(size, keyType.name, valueType.name) + "}")
     d.putNumChild(size)
     if d.isExpanded():
         with Children(d, size):
@@ -182,8 +183,22 @@ def qdump__cc__map(d, value):
                     n = pn.dereference()
                     iv = n["value"]
                     # d.putSubItem(to_str_preview(iv["key"]), n["value"])
-                    add_computed_child(d, to_str_preview(iv["key"]), to_str_preview(
-                        iv["value"]), children=[iv["key"], iv["value"]], childrenNames=["key", "value"])
+
+                    e_key = iv["key"]
+                    e_value = iv["value"]
+                    s_key = to_str_preview_or_none(e_key)
+
+                    # key has proper preview? only expand value
+                    if s_key is not None:
+                        with UnnamedSubItem(d, idx):
+                            d.putName(s_key)
+                            d.putField('iname', d.currentIName)
+                            d.putItem(e_value)
+                    # key is complex type? need to expand into key/value
+                    else:
+                        add_computed_child(d, "[{}]".format(idx), to_str_preview(
+                            iv["value"]), children=[iv["key"], iv["value"]], childrenNames=["key", "value"], iname=idx)
+
                     idx += 1
                     if idx >= maxCnt:
                         add_computed_child(
