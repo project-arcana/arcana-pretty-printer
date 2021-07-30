@@ -28,7 +28,7 @@ def arithmetic_value(value):
 def to_str_preview(value):
     s = to_str_preview_or_none(value)
     if s is None:
-        return "<struct>"
+        return "{..}"
     return s
 
 
