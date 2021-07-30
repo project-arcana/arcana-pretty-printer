@@ -28,7 +28,7 @@ def arithmetic_value(value):
 def to_str_preview(value):
     s = to_str_preview_or_none(value)
     if s is None:
-        return "??"
+        return "<struct>"
     return s
 
 
@@ -76,6 +76,12 @@ def to_str_preview_or_none(value):
                 return s
 
             return None
+
+        if value.type.name == "char":
+            c = int(value)
+            if chr(c).isprintable():
+                return "'{}'".format(chr(c)).replace('"', '\\"')
+            return "char({})".format(c)
 
         return value.display().replace('"', '\\"')
 
@@ -130,8 +136,8 @@ def show_arraylike_data(d, size, data_ptr, innertype):
     addrBase = data_ptr
 
     d.putNumChild(size)
-    d.putValue(make_array_preview_str(size, innertype, [d.createValue(
-        addrBase + i * innerSize, innertype) for i in range(size)]))
+    d.putValue(make_array_preview_str(size, innertype, (d.createValue(
+        addrBase + i * innerSize, innertype) for i in range(size))))
     if d.isExpanded():
         with Children(d, size, innertype, None, 2000, addrBase=addrBase, addrStep=innerSize):
             for i in d.childRange():
