@@ -4,7 +4,7 @@
 
 import math
 from dumper import Children, SubItem
-from helper import make_array_preview_str, to_str_preview, is_arithmetic_type, arithmetic_value, add_computed_child, show_arraylike_data
+from helper import *
 
 
 def prettify_tg_name(d, value, tname, ttype):
@@ -53,7 +53,7 @@ def tg_print_complike(d, value, tname, comps, compute_length=False):
     if compute_length:
         numChilds += 1
 
-    d.putValue(name.replace('"', '\\"'))
+    d.putValue(name)
     d.putNumChild(numChilds)
     if d.isExpanded():
         with Children(d, numChilds):
@@ -87,7 +87,7 @@ def qdump__tg__aabb(d, value):
     if is_arithmetic_type(comptype):
         numChilds += 1
 
-    d.putValue(name.replace('"', '\\"'))
+    d.putValue(name)
     d.putNumChild(numChilds)
     if d.isExpanded():
         with Children(d, numChilds):

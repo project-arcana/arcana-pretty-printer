@@ -23,27 +23,43 @@ def arithmetic_value(value):
 
 
 # mainly calls value.display(), but for floats it will make "shorter" version
+# NOTE: currently unable to provide previews of structs due to qt's arch
+# NOTE: ensures that all " are escaped
 def to_str_preview(value):
     # TODO: might not recognize typedefs
     if isinstance(value, DumperBase.Value):
-        if value.type is not None and value.type.code == TypeCode.Float:
+        if value.type is None:
+            return "??"
+
+        if value.type.code == TypeCode.Float:
             return "{:.3g}".format(float(value.floatingPoint()))
 
-        return value.display()
+        if value.type.code == TypeCode.Struct:
+            return "??"
+
+        return value.display().replace('"', '\\"')
 
     # primitive types
     if isinstance(value, float):
         return "{:.3g}".format(value)
 
-    return str(value)
+    return str(value).replace('"', '\\"')
 
 
-def add_computed_child(d, name, val, type="", encoding=None):
+def add_computed_child(d, name, val, type="", encoding=None, children=[], childrenNames=[]):
     with SubItem(d, name):
-        d.putNumChild(0)
+        d.putNumChild(len(children))
         d.putName(name)
         d.putValue(str(val), encoding=encoding)
         d.putType(type)
+        if d.isExpanded() and len(children) > 0:
+            with Children(d, len(children)):
+                if len(childrenNames) > 0:
+                    for n, v in zip(childrenNames, children):
+                        d.putSubItem(n, v)
+                else:
+                    for i in range(len(children)):
+                        d.putSubItem(i, children[i])
 
 
 def make_array_preview_str(count, type, value_gen):
