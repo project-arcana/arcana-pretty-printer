@@ -75,6 +75,15 @@ def make_halfedge_handle(d, idx, mesh):
     return d.createValue(data, type_halfedge_handle)
 
 
+def make_count_str(allcnt, remcnt, singular_name, plural_name):
+    if remcnt == 0:
+        return "{} {}".format(
+            allcnt, singular_name if allcnt == 1 else plural_name)
+    else:
+        return "{} {} (+ {} removed)".format(
+            allcnt - remcnt, singular_name if allcnt - remcnt == 1 else plural_name, remcnt)
+
+
 def qdump__polymesh__Mesh(d, value):
     d.putType("pm::Mesh")
     vcnt = int(value["mVerticesSize"])
@@ -106,12 +115,7 @@ def qdump__polymesh__Mesh(d, value):
 
             def show_collection(sname, pname, pcnt, prcnt, make_handle):
                 with SubItem(d, pname):
-                    if prcnt == 0:
-                        d.putValue("{} {}".format(
-                            pcnt, sname if pcnt == 1 else pname))
-                    else:
-                        d.putValue("{} {} ({} removed)".format(
-                            pcnt - prcnt, sname if pcnt - prcnt == 1 else pname, prcnt))
+                    d.putValue(make_count_str(pcnt, prcnt, sname, pname))
                     d.putType("pm::{}_collection".format(sname))
 
                     d.putNumChild(pcnt - prcnt)
@@ -287,3 +291,135 @@ def qdump__polymesh__face_handle(d, value):
         with Children(d):
             d.putSubItem("idx", value["idx"])
             d.putSubItem("mesh", value["mesh"])
+
+
+def qdump__polymesh__vertex_attribute(d, value):
+    mesh = value["mMesh"]
+
+    if int(mesh) == 0:
+        d.putValue("<no mesh attached>")
+        return
+
+    mesh = mesh.dereference()
+
+    maxCount = 1000
+
+    vcnt = int(mesh["mVerticesSize"])
+    vrcnt = int(mesh["mRemovedVertices"])
+
+    d.putValue(make_count_str(vcnt, vrcnt, "value", "values"))
+
+    d.putExpandable()
+    if d.isExpanded():
+        with Children(d):
+            d.putSubItem("mesh", mesh)
+            d.putSubItem("default", value["mDefaultValue"])
+            aptr = value["mData"]["ptr"]
+            ohptr = mesh["mVertexToOutgoingHalfedge"]["ptr"]
+            for i in range(vcnt):
+                if i >= maxCount:
+                    add_computed_child(d, "...", "+ {} more".format(vcnt - maxCount))
+                    break
+                if int(ohptr[i]["value"]) == -2:
+                    add_computed_child(d, "[{}]".format(i), "<removed>")
+                else:
+                    d.putSubItem("[{}]".format(i), aptr[i])
+
+
+def qdump__polymesh__face_attribute(d, value):
+    mesh = value["mMesh"]
+
+    if int(mesh) == 0:
+        d.putValue("<no mesh attached>")
+        return
+
+    mesh = mesh.dereference()
+
+    maxCount = 1000
+
+    fcnt = int(mesh["mFacesSize"])
+    frcnt = int(mesh["mRemovedFaces"])
+
+    d.putValue(make_count_str(fcnt, frcnt, "value", "values"))
+
+    d.putExpandable()
+    if d.isExpanded():
+        with Children(d):
+            d.putSubItem("mesh", mesh)
+            d.putSubItem("default", value["mDefaultValue"])
+            aptr = value["mData"]["ptr"]
+            vhptr = mesh["mFaceToHalfedge"]["ptr"]
+            for i in range(fcnt):
+                if i >= maxCount:
+                    add_computed_child(d, "...", "+ {} more".format(fcnt - maxCount))
+                    break
+                if int(vhptr[i]["value"]) == -1:
+                    add_computed_child(d, "[{}]".format(i), "<removed>")
+                else:
+                    d.putSubItem("[{}]".format(i), aptr[i])
+
+
+def qdump__polymesh__edge_attribute(d, value):
+    mesh = value["mMesh"]
+
+    if int(mesh) == 0:
+        d.putValue("<no mesh attached>")
+        return
+
+    mesh = mesh.dereference()
+
+    maxCount = 1000
+
+    ecnt = int(mesh["mHalfedgesSize"]) // 2
+    ercnt = int(mesh["mRemovedHalfedges"]) // 2
+
+    d.putValue(make_count_str(ecnt, ercnt, "value", "values"))
+
+    d.putExpandable()
+    if d.isExpanded():
+        with Children(d):
+            d.putSubItem("mesh", mesh)
+            d.putSubItem("default", value["mDefaultValue"])
+            aptr = value["mData"]["ptr"]
+            vhptr = mesh["mHalfedgeToVertex"]["ptr"]
+            for i in range(ecnt):
+                if i >= maxCount:
+                    add_computed_child(d, "...", "+ {} more".format(ecnt - maxCount))
+                    break
+                if int(vhptr[2 * i]["value"]) == -1:
+                    add_computed_child(d, "[{}]".format(i), "<removed>")
+                else:
+                    d.putSubItem("[{}]".format(i), aptr[i])
+
+
+def qdump__polymesh__halfedge_attribute(d, value):
+    mesh = value["mMesh"]
+
+    if int(mesh) == 0:
+        d.putValue("<no mesh attached>")
+        return
+
+    mesh = mesh.dereference()
+
+    maxCount = 1000
+
+    hcnt = int(mesh["mHalfedgesSize"])
+    hrcnt = int(mesh["mRemovedHalfedges"])
+
+    d.putValue(make_count_str(hcnt, hrcnt, "value", "values"))
+
+    d.putExpandable()
+    if d.isExpanded():
+        with Children(d):
+            d.putSubItem("mesh", mesh)
+            d.putSubItem("default", value["mDefaultValue"])
+            aptr = value["mData"]["ptr"]
+            vhptr = mesh["mHalfedgeToVertex"]["ptr"]
+            for i in range(hcnt):
+                if i >= maxCount:
+                    add_computed_child(d, "...", "+ {} more".format(hcnt - maxCount))
+                    break
+                if int(vhptr[i]["value"]) == -1:
+                    add_computed_child(d, "[{}]".format(i), "<removed>")
+                else:
+                    d.putSubItem("[{}]".format(i), aptr[i])
