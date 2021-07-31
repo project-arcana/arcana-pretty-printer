@@ -93,6 +93,9 @@ def to_str_preview_or_none(value):
 
 
 def add_computed_child(d, name, val, type="", encoding=None, children=[], childrenNames=[], iname=None):
+    if isinstance(val, bool):
+        val = "true" if val else "false"
+
     with UnnamedSubItem(d, iname if iname is not None else name):
         d.putField('iname', d.currentIName)
         d.putName(name)
