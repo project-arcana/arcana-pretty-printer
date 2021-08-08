@@ -35,17 +35,27 @@ def to_str_preview(value):
 # looks for ways to interpret value as a string
 # returns None if not possible
 def try_get_string(value):
-    s_data = value.findMemberByName("_data")
+    members = value.members(True)
+    s_data = None
+    s_size = None
+    for m in members:
+        if m.type.code == TypeCode.Typedef:
+            m = m.detypedef()
+        if m.name == "_data":
+            s_data = m
+        if m.name == "_size":
+            s_size = m
+
     if s_data is None:
         return None
+    if s_size is None:
+        return None
+
     if s_data.type.code != TypeCode.Pointer:
         return None
     if s_data.type.target().name != "char":
         return None
-
-    s_size = value.findMemberByName("_size")
-    if s_size is None:
-        return None
+        
     if s_size.type.code != TypeCode.Integral:
         return None
 
@@ -68,6 +78,12 @@ def to_str_preview_or_none(value):
         if value.type.code == TypeCode.Float:
             return "{:.3g}".format(float(value.floatingPoint()))
 
+        if value.type.code == TypeCode.Integral:
+            return value.display()
+
+        if value.type.code == TypeCode.Enum:
+            return value.display()
+
         if value.type.code == TypeCode.Struct:
 
             # "string protocol"
@@ -83,7 +99,7 @@ def to_str_preview_or_none(value):
                 return "'{}'".format(chr(c)).replace('"', '\\"')
             return "char({})".format(c)
 
-        return value.display().replace('"', '\\"')
+        return None
 
     # primitive types
     if isinstance(value, float):
